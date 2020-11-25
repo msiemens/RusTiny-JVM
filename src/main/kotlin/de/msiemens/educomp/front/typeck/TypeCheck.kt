@@ -58,6 +58,7 @@ class TypeCheck(private val program: Program, private val symbolTable: SymbolTab
 
     private fun checkExpression(expression: Node<Expression>, expected: Type? = null): Type {
         val type = when (expression.value) {
+            is BlockExpression -> checkBlock(expression.value.block)
             is LiteralExpression -> expression.value.value.type
             is VariableExpression -> resolveVariable(expression.value.name)
             is AssignExpression -> checkAssign(expression.value.left, expression.value.right)

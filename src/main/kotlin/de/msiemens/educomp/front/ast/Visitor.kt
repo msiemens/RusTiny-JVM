@@ -42,6 +42,7 @@ open class Visitor {
 
     protected open fun visitExpression(expression: Node<Expression>) {
         when (expression.value) {
+            is BlockExpression -> visitBlock(expression.value.block)
             is VariableExpression -> visitIdent(expression.value.name)
             is AssignExpression -> {
                 visitExpression(expression.value.left)
@@ -71,7 +72,8 @@ open class Visitor {
                 visitExpression(expression.value.condition)
                 visitBlock(expression.value.body)
             }
-            else -> {
+            is LiteralExpression, BreakExpression, UnitExpression -> {
+                // Skip
             }
         }
     }

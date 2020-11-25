@@ -233,6 +233,13 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
 
     internal fun parseExpressionWithPrecedence(precedence: Int): Node<Expression> {
         return when (val t = token) {
+            is LBraceToken -> {
+                val lo = span
+
+                val block = parseBlock()
+
+                Node(BlockExpression(block), lo + span)
+            }
             is KeywordToken -> when (t.keyword) {
                 Keyword.If -> parseIf()
                 Keyword.While -> parseWhile()

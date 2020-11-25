@@ -51,6 +51,7 @@ class CodeGenerator(
 
     internal fun genExpression(expression: Node<Expression>) {
         when (val expr = expression.value) {
+            is BlockExpression -> generate(expr.block)
             is LiteralExpression -> variables.stack.push(expr.value, expr.value.type)
             is VariableExpression -> genVariable(expr)
             is AssignExpression -> genAssign(expr.left, expr.right)
@@ -64,6 +65,7 @@ class CodeGenerator(
             is WhileExpression -> genWhile(expr.condition, expr.body)
             BreakExpression -> genBreak()
             UnitExpression -> return
+            else -> TODO()
         }
     }
 

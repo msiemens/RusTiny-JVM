@@ -87,6 +87,13 @@ data class ExpressionStatement(val expression: Node<Expression>) : Statement()
 sealed class Expression
 
 /**
+ * A block expression.
+ */
+data class BlockExpression(
+    val block: Node<Block>,
+) : Expression()
+
+/**
  * A literal value.
  */
 data class LiteralExpression(
