@@ -28,7 +28,7 @@ object Bytecode {
         Type.Int -> Opcodes.IRETURN
         Type.Char -> Opcodes.IRETURN
         Type.Str -> Opcodes.ARETURN
-        Type.Unit -> error("Cannot return () type")
+        Type.Unit -> Opcodes.RETURN
         else -> error("Invalid JVM type $type")
     }
 

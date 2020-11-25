@@ -136,78 +136,71 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
         expect(LBraceToken)
 
         val statements = mutableListOf<Node<Statement>>()
-        var expression: Node<Expression>? = null
+        var expression: Node<Expression>
 
+        // Parse all statements
         while (true) {
-            val t = token
+            val curr = span
 
-            if (t is KeywordToken) {
-                when (t.keyword) {
-                    Keyword.Let -> {
-                        statements.add(parseDeclaration())
-                        continue
-                    }
+            if (eat(RBraceToken)) {
+                expression = Node(UnitExpression, curr)
 
-                    Keyword.If -> {
-                        val lo = span
-                        val expr = parseIf()
+                break
+            }
 
-                        // If expressions can appear as statements without a trailing semicolon IF
-                        // they have no block expression
-                        if ((expr.value as IfExpression).consequence.value.expression.value == UnitExpression) {
-                            // It's actually a statement
-                            statements.add(Node(ExpressionStatement(expr), lo + span))
+            val statement = parseStatement()
 
-                            continue
-                        }
+            if (exprStatementNeedsSemicolon(statement)) {
+                val closingToken = expect(listOf(SemicolonToken, RBraceToken))
+                if (closingToken == RBraceToken) {
+                    expression = (statement.value as ExpressionStatement).expression
 
-                        expression = expr
-                    }
-                    // While expressions can appear as statements without a trailing semicolon
-                    Keyword.While -> {
-                        val lo = span
-                        val expr = parseWhile()
+                    break
+                }
+            } else {
+                if (eat(RBraceToken)) {
+                    expression = (statement.value as ExpressionStatement).expression
 
-                        statements.add(Node(ExpressionStatement(expr), lo + span))
-
-                        continue
-                    }
-                    else -> {
-                        // Continue processing below
-                    }
+                    break
                 }
             }
 
             while (eat(SemicolonToken)) {
-                // Eat all semicolons that are remaining
+                // Eat all remaining semicolons
             }
 
-            if (token == RBraceToken) {
-                // We've reached the end of the block
-                break
-            }
-
-            // Parse the trailing expression
-            val lo = span
-            val trailingExpression = parseExpression()
-
-            if (eat(SemicolonToken)) {
-                // It's actually a statement
-                statements.add(Node(ExpressionStatement(trailingExpression), lo + span))
-            } else {
-                expression = trailingExpression
-                break
-            }
+            statements += statement
         }
 
-        val expr: Node<Expression> = expression ?: Node(UnitExpression, span)
+        return Node(Block(statements, expression), lo + span)
+    }
 
-        expect(RBraceToken)
+    private fun exprStatementNeedsSemicolon(statement: Node<Statement>): Boolean {
+        return when (val s = statement.value) {
+            is DeclarationStatement -> true
+            is ExpressionStatement -> {
+                val expr = s.expression.value
 
-        return Node(Block(statements, expr), lo + span)
+                expr !is BlockExpression && expr !is IfExpression && expr !is WhileExpression
+            }
+        }
     }
 
     // Statements
+
+    private fun parseStatement(): Node<Statement> {
+        val lo = span
+
+        val t = token
+
+        if (t is KeywordToken && t.keyword == Keyword.Let) {
+            return parseDeclaration()
+        }
+
+        val expr = parseExpression()
+
+        return Node(ExpressionStatement(expr), lo + span)
+    }
 
     private fun parseDeclaration(): Node<Statement> {
         // Grammar: k_let binding EQ expression
@@ -221,8 +214,6 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
         expect(EqToken)
 
         val value = parseExpression()
-
-        expect(SemicolonToken)
 
         return Node(DeclarationStatement(name, value), lo + span)
     }
@@ -373,6 +364,17 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
         if (!eat(t)) {
             fatal("expected `${t.display}`, found `${token.display}`")
         }
+    }
+
+    private fun expect(tokens: List<Token>): Token {
+        val t = tokens.find { it == token }
+        if (t != null) {
+            bump()
+
+            return t
+        }
+
+        fatal("expected one of ${tokens.joinToString { "`${it.display}`" }}, found `${token.display}`")
     }
 
     internal fun eat(t: Token): Boolean {
