@@ -16,13 +16,13 @@ class VariablesStack(
 ) {
     data class Variable(
         val index: Int,
-        val name: String,
+        val name: Pair<String, Node.Id>,
         val type: Type,
     )
 
     data class Scope(
         val scope: Node.Id,
-        val onStack: MutableMap<String, Variable>,
+        val onStack: MutableMap<Pair<String, Node.Id>, Variable>,
         val `break`: Label?,
     )
 
@@ -32,32 +32,50 @@ class VariablesStack(
     var `break`: Label? = null
         private set
 
-    private var scope: Node.Id = Node.Id.EMPTY
+    var scope: Node.Id = Node.Id.EMPTY
+        private set
+
+    private var parentScopes = mutableMapOf<Node.Id, Node.Id>()
 
     private var currentVarIndex: Int = if (static) 0 else 1
 
     private val used = mutableListOf<Variable>()
-    private var onStack = function?.bindings
-        ?.map { it.value.name.value to it.value.type }
-        ?.map { it.first to define(it.first, it.second) }
-        ?.toMap()
-        ?.toMutableMap() ?: mutableMapOf()
+    private var onStack = mutableMapOf<Pair<String, Node.Id>, Variable>()
 
     private val states = mutableListOf<Scope>()
 
+    init {
+        if (function != null) {
+            onStack = function.bindings
+                .map { (it.value.name.value to function.body.id) to it.value.type }
+                .map { it.first to define(it.first, it.second) }
+                .toMap()
+                .toMutableMap()
+        }
+    }
+
     fun push(id: Node.Id) {
+        check(id != scope) { "New scope and current scope is equal" }
+
+        parentScopes[id] = scope
         states += Scope(id, onStack, `break`)
+
+        scope = id
     }
 
     fun pop() {
-        val state = states.removeLast()
+        states.removeLast()
 
-        scope = state.scope
-        onStack = state.onStack
-        `break` = state.`break`
+        if (states.isNotEmpty()) {
+            val restored = states.last()
+
+            scope = restored.scope
+            onStack = restored.onStack
+            `break` = restored.`break`
+        }
     }
 
-    fun defineVariable(name: String, type: Type, initFromStack: Boolean) {
+    fun defineVariable(name: Pair<String, Node.Id>, type: Type, initFromStack: Boolean) {
         if (!initFromStack) {
             when (type) {
                 Type.Bool, Type.Int, Type.Char -> writer.visitLdcInsn(0)
@@ -74,9 +92,26 @@ class VariablesStack(
         stack.store(variable)
     }
 
-    operator fun get(name: String): Variable? = onStack[name]
+    operator fun get(name: Pair<String, Node.Id>): Variable? {
+        return get(name.first, name.second)
+    }
 
-    private fun define(name: String, type: Type): Variable {
+    operator fun get(name: String, scope: Node.Id): Variable? {
+        if (scope == Node.Id.EMPTY) {
+            return null
+        }
+
+        val variable = onStack[name to scope]
+        if (variable != null) {
+            return variable
+        }
+
+        return get(name, parentScopes[scope] ?: return null)
+    }
+
+    operator fun get(name: String): Variable? = onStack[name to scope]
+
+    private fun define(name: Pair<String, Node.Id>, type: Type): Variable {
         val index = currentVarIndex
         currentVarIndex++
 

@@ -12,7 +12,7 @@ class CodeGenerator(
     private val fields: Map<String, Pair<Type, Node<Expression>>>,
     private val constants: Map<String, Value>,
     internal val variables: VariablesStack,
-    private val types: Map<Node.Id, Type>,
+    internal val types: Map<Node.Id, Type>,
     private val returnType: Type,
     private val writer: MethodVisitor
 ) {
@@ -46,7 +46,7 @@ class CodeGenerator(
 
         val binding = declaration.binding.value
 
-        variables.defineVariable(binding.name.value, binding.type, initFromStack = true)
+        variables.defineVariable(binding.name.value to variables.scope, binding.type, initFromStack = true)
     }
 
     internal fun genExpression(expression: Node<Expression>) {
@@ -72,7 +72,7 @@ class CodeGenerator(
     private fun genVariable(value: VariableExpression) {
         val name = value.name.value
 
-        val variable = variables[name]
+        val variable = variables[name to variables.scope]
         if (variable != null) {
             return variables.stack.load(variable)
         }
@@ -115,7 +115,7 @@ class CodeGenerator(
         } else {
             error("Assignment to a non-variable value")
         }
-        val variable = variables[name]
+        val variable = variables[name to variables.scope]
         if (variable != null) {
             variables.stack.store(variable)
 
