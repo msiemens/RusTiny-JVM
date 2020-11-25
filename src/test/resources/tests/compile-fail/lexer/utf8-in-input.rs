@@ -1,0 +1,1 @@
+  ö //! ERROR(1:3): unexpected token: `ö`, expected a symbol
