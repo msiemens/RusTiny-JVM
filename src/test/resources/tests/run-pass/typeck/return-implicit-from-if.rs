@@ -7,7 +7,7 @@ fn foo(a: int, b: bool, c: char) -> char {
 }
 
 fn main() {
-    let a: char = foo(1, false, 'a');
+    let a = foo(1, false, 'a');
     if a == 'd' {
         println(1);
     }

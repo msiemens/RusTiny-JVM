@@ -33,7 +33,8 @@ open class Visitor {
     protected open fun visitStatement(statement: Node<Statement>) {
         when (statement.value) {
             is DeclarationStatement -> {
-                visitBinding(statement.value.binding)
+                visitType(statement.value.type)
+                visitIdent(statement.value.name)
                 visitExpression(statement.value.value)
             }
             is ExpressionStatement -> visitExpression(statement.value.expression)
@@ -82,7 +83,7 @@ open class Visitor {
         // Nothing to do, it's a leaf node
     }
 
-    protected open fun visitType(type: Type) {
+    protected open fun visitType(type: Node<Type>) {
         // Nothing to do, it's a leaf node
     }
 }

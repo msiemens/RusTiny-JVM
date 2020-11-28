@@ -3,7 +3,7 @@ fn foo() -> int {
 }
 
 fn main() {
-    let a: int = foo();
+    let a = foo();
 
     println(a);
 }

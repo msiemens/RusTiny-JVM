@@ -37,7 +37,9 @@ class ScopeTableBuilder(private val program: Program, private val table: SymbolT
 
     override fun visitStatement(statement: Node<Statement>) {
         if (statement.value is DeclarationStatement) {
-            registerDeclaration(statement.value.binding)
+            val scope = currentScope ?: error("Resolving a variable without a containing scope")
+
+            table.registerVariable(scope, statement.value.name, statement.value.type)
         }
 
         super.visitStatement(statement)
@@ -85,7 +87,7 @@ class ScopeTableBuilder(private val program: Program, private val table: SymbolT
             }
 
         // Register arguments in scope table
-        bindings.forEach { table.registerVariable(scope, it) }
+        bindings.forEach { table.registerVariable(scope, it.value.name, it.value.type) }
     }
 
     private fun resolveCall(expression: Node<Expression>) {
@@ -113,12 +115,6 @@ class ScopeTableBuilder(private val program: Program, private val table: SymbolT
         if (table.resolveVariable(scope, name.value) == null) {
             Driver.errorAt("variable `${name.value}` not declared", name.span, program.codeMap)
         }
-    }
-
-    private fun registerDeclaration(binding: Node<Binding>) {
-        val scope = currentScope ?: error("Resolving a variable without a containing scope")
-
-        table.registerVariable(scope, binding)
     }
 
     fun run() {

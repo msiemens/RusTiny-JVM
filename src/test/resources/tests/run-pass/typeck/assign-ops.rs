@@ -1,6 +1,6 @@
 fn main() {
-    let a: bool = false;
-    let b: int = 5;
+    let a = false;
+    let b = 5;
 
     a |= true;
     b &= 1;

@@ -13,7 +13,7 @@ data class Node<T>(val value: T, val span: Span) {
         operator fun plus(rhs: Span): Span = Span(pos, rhs.pos + rhs.len - pos)
 
         companion object {
-            val empty = Span(pos = 0, len = 0)
+            val empty = Span(pos = -1, len = 0)
         }
     }
 

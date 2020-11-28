@@ -1,13 +1,19 @@
 fn main() {
-    let a: int = 4;
+    let a = 4;
+    let b = true;
 
     {
-        let a: int = 2;
+        let a = 2;
+        let b = false;
 
         a -= 2;
 
-        println(a);
+        if !b {
+            println(a);
+        }
     }
 
-    println(a);
+    if b {
+        println(a);
+    }
 }

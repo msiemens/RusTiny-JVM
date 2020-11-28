@@ -44,9 +44,10 @@ class CodeGenerator(
     private fun genDeclaration(declaration: DeclarationStatement) {
         genExpression(declaration.value)
 
-        val binding = declaration.binding.value
+        val name = declaration.name.value
+        val type = types[declaration.value.id] ?: error("No type known for declaration $declaration")
 
-        variables.defineVariable(binding.name.value to variables.scope, binding.type, initFromStack = true)
+        variables.defineVariable(name to variables.scope, type, initFromStack = true)
     }
 
     internal fun genExpression(expression: Node<Expression>) {

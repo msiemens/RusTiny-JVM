@@ -18,13 +18,13 @@ sealed class Symbol {
 data class Function(
     val name: Node<String>,
     val bindings: List<Node<Binding>>,
-    val returnType: Type,
+    val returnType: Node<Type>,
     val body: Node<Block>,
 ) : Symbol() {
     override fun name(): String = name.value
 
     val signature: Signature
-        get() = bindings.map { it.value.type } to returnType
+        get() = bindings.map { it.value.type.value } to returnType.value
 }
 
 data class NativeFunction(val name: String, val arguments: List<Type>, val returnType: Type) : Symbol() {
@@ -68,7 +68,7 @@ data class Block(
  * A binding of a value to a name (e.g. local variable, function argument).
  */
 data class Binding(
-    val type: Type,
+    val type: Node<Type>,
     val name: Node<String>,
 )
 
@@ -78,7 +78,8 @@ data class Binding(
 sealed class Statement
 
 data class DeclarationStatement(
-    val binding: Node<Binding>,
+    val name: Node<String>,
+    val type: Node<Type>,
     val value: Node<Expression>,
 ) : Statement()
 

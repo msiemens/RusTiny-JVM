@@ -63,7 +63,7 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
         val returnType = if (eat(RArrowToken)) {
             parseType()
         } else {
-            Type.Unit
+            Node.dummy(Type.Unit)
         }
 
         val body = parseBlock()
@@ -136,7 +136,7 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
         expect(LBraceToken)
 
         val statements = mutableListOf<Node<Statement>>()
-        var expression: Node<Expression>
+        val expression: Node<Expression>
 
         // Parse all statements
         while (true) {
@@ -209,13 +209,19 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
 
         expect(KeywordToken(Keyword.Let))
 
-        val name = parseBinding()
+        val name = parseIdent()
+
+        val type: Node<Type> = if (eat(ColonToken)) {
+            parseType()
+        } else {
+            Node.dummy(Type.Infer)
+        }
 
         expect(EqToken)
 
         val value = parseExpression()
 
-        return Node(DeclarationStatement(name, value), lo + span)
+        return Node(DeclarationStatement(name, type, value), lo + span)
     }
 
     // Expressions
@@ -352,10 +358,14 @@ class Parser(private val lexer: Lexer, private val codeMap: CodeMap) {
         return Node(LiteralExpression(value), s)
     }
 
-    private fun parseType(): Type {
+    private fun parseType(): Node<Type> {
+        val lo = span
+
         val identifier = parseIdent()
 
-        return Type.values().find { it.display == identifier.value } ?: unexpectedToken("a type")
+        val type = Type.values().find { it.display == identifier.value } ?: unexpectedToken("a type")
+
+        return Node(type, lo + span)
     }
 
     // Token processing

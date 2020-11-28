@@ -1,7 +1,7 @@
 fn foo() -> int {
-    let a: int = 2;
+    let a = 2;
 
-    let b: int = if a + 3 == 7 {
+    let b = if a + 3 == 7 {
         a
     } else {
         2
@@ -12,7 +12,7 @@ fn foo() -> int {
 
 
 fn main() {
-    let a: int = foo();
+    let a = foo();
 
     println(a);
 }

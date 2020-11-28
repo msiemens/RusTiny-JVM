@@ -1,7 +1,7 @@
 fn main() {
-    let a: bool = true;
+    let a = true;
     if a {
-        let a: int = 3;
+        let a = 3;
         a += 2;
 
         println(a);

@@ -48,7 +48,7 @@ class VariablesStack(
         if (function != null) {
             onStack = function.bindings
                 .map { (it.value.name.value to function.body.id) to it.value.type }
-                .map { it.first to define(it.first, it.second) }
+                .map { it.first to define(it.first, it.second.value) }
                 .toMap()
                 .toMutableMap()
         }

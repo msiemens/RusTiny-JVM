@@ -46,11 +46,19 @@ class TypeCheck(private val program: Program, private val symbolTable: SymbolTab
     private fun checkStatement(statement: Node<Statement>) {
         when (statement.value) {
             is DeclarationStatement -> {
-                val variableName = statement.value.binding.value.name.value
-                val variable = symbolTable.resolveVariable(scope, variableName)
-                    ?: error("Variable $variableName missing in symbol table")
+                val name = statement.value.name.value
+                val variable = symbolTable.resolveVariable(scope, name)
+                    ?: error("Variable $name missing in symbol table")
 
-                checkExpression(statement.value.value, variable.type)
+                val type = if (variable.type == Type.Infer) {
+                    checkExpression(statement.value.value)
+                } else {
+                    checkExpression(statement.value.value, variable.type)
+                }
+
+                symbolTable.setVariableType(scope, name, type)
+
+                types[statement.id] = type
             }
             is ExpressionStatement -> checkExpression(statement.value.expression)
         }
@@ -115,7 +123,9 @@ class TypeCheck(private val program: Program, private val symbolTable: SymbolTab
     private fun checkReturn(value: Node<Expression>): Type {
         ctx.explicitReturn = true
 
-        return checkExpression(value, ctx.returnType)
+        checkExpression(value, ctx.returnType)
+
+        return Type.Unit
     }
 
     private fun checkCall(callee: Node<Expression>, arguments: List<Node<Expression>>): Type {
@@ -270,9 +280,9 @@ class TypeCheck(private val program: Program, private val symbolTable: SymbolTab
     fun run(): Map<Node.Id, Type> {
         program.symbols.forEach {
             when (it.value) {
-                is Function -> checkFunction(it.value.returnType, it.value.body)
-                is Static -> checkExpression(it.value.value, it.value.binding.value.type)
-                is Constant -> checkExpression(it.value.value, it.value.binding.value.type)
+                is Function -> checkFunction(it.value.returnType.value, it.value.body)
+                is Static -> checkExpression(it.value.value, it.value.binding.value.type.value)
+                is Constant -> checkExpression(it.value.value, it.value.binding.value.type.value)
                 is NativeFunction -> {
                     // Do nothing
                 }

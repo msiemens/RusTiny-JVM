@@ -1,12 +1,12 @@
 fn foo() {
-    let a: int = 2;
+    let a = 2;
     a += 4;
 
     println(a);
 }
 
 fn bar() {
-    let a: bool = false;
+    let a = false;
     a |= true;
 
     if a {

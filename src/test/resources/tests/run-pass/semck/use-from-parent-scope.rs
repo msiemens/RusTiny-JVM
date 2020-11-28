@@ -1,5 +1,5 @@
 fn main() {
-    let a: int = 0;
+    let a = 0;
 
     if true {
         a += 1;

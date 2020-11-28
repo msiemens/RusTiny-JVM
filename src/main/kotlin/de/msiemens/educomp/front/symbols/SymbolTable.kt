@@ -32,16 +32,16 @@ class SymbolTable private constructor(val codeMap: CodeMap) {
         scopes[scope] = BlockScope()
     }
 
-    fun registerVariable(scope: Node.Id, binding: Node<Binding>) {
+    fun registerVariable(scope: Node.Id, name: Node<String>, type: Node<Type>) {
         val variables = (scopes[scope] ?: error("Unregistered scope $scope")).variables
 
-        if (binding.value.name.value in variables) {
-            Driver.errorAt("cannot redeclare `${binding.value.name.value}`", binding.span, codeMap)
+        if (name.value in variables) {
+            Driver.errorAt("cannot redeclare `${name.value}`", name.span, codeMap)
 
             return
         }
 
-        variables[binding.value.name.value] = Variable(binding.value.type)
+        variables[name.value] = Variable(type.value)
     }
 
     fun lookupSymbol(name: String): Symbol? = symbols[name]
@@ -77,11 +77,11 @@ class SymbolTable private constructor(val codeMap: CodeMap) {
         val symbol = lookupSymbol(name)
 
         if (symbol != null && symbol is Static) {
-            return Variable(symbol.binding.value.type)
+            return Variable(symbol.binding.value.type.value)
         }
 
         if (symbol != null && symbol is Constant) {
-            return Variable(symbol.binding.value.type)
+            return Variable(symbol.binding.value.type.value)
         }
 
         return null
@@ -89,6 +89,13 @@ class SymbolTable private constructor(val codeMap: CodeMap) {
 
     fun setParentScope(scope: Node.Id, parent: Node.Id) {
         (scopes[scope] ?: error("Unregistered scope $scope")).parent = parent
+    }
+
+    fun setVariableType(scope: Node.Id, name: String, type: Type) {
+        val scope = scopes[scope] ?: error("Unregistered scope $scope")
+        val variable = scope.variables[name] ?: error("Unregistered variable $name")
+
+        scope.variables[name] = variable.copy(type = type)
     }
 
     private fun parentScope(scope: Node.Id): Node.Id? = scopes[scope]?.parent

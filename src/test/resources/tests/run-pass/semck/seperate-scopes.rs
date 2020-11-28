@@ -1,5 +1,5 @@
 fn main() {
-    let foo: int = 3;
+    let foo = 3;
     foo += 2;
 
     println(foo);

@@ -1,5 +1,5 @@
 fn main() {
-    let a: int = GLOBAL + 4;
+    let a = GLOBAL + 4;
 
     println(a);
 }

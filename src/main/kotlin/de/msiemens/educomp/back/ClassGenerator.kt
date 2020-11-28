@@ -24,7 +24,7 @@ class ClassGenerator(
         program.symbols.forEach { node ->
             when (val symbol = node.value) {
                 is Static -> {
-                    staticFields[symbol.name()] = symbol.binding.value.type to symbol.value
+                    staticFields[symbol.name()] = symbol.binding.value.type.value to symbol.value
                 }
                 is Constant -> {
                     val value = if (symbol.value.value is LiteralExpression) {
@@ -36,7 +36,7 @@ class ClassGenerator(
                     constants[symbol.name()] = value
                 }
                 is Function -> {
-                    functions[symbol.name()] = symbol.bindings.map { it.value.type } to symbol.returnType
+                    functions[symbol.name()] = symbol.bindings.map { it.value.type.value } to symbol.returnType.value
                     impls += symbol
                 }
                 is NativeFunction -> functions[symbol.name()] = symbol.arguments to symbol.returnType
@@ -188,14 +188,14 @@ class ClassGenerator(
             constants = constants,
             variables = variables,
             types = types,
-            returnType = function.returnType,
+            returnType = function.returnType.value,
             writer = method
         )
         generator.generate(function.body)
 
         // No explicit return, we need to add the final return operation
         if (function.body.value.expression.value != UnitExpression) {
-            method.visitInsn(Bytecode.ret(function.returnType))
+            method.visitInsn(Bytecode.ret(function.returnType.value))
         } else {
             method.visitInsn(Opcodes.RETURN)
         }

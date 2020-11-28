@@ -6,5 +6,6 @@ enum class Type(val display: String? = null) {
     Char("char"),
     Str("str"),
     Unit("()"),
-    Err // Special type used for expressions with type errors;
+    Err, // Special type used for expressions with type errors
+    Infer
 }

@@ -1,5 +1,5 @@
 fn main() {
-    let a: int = 10;
+    let a = 10;
 
     while a > 0 {
         a -= 1;
